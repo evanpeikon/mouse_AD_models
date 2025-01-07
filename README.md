@@ -180,6 +180,7 @@ The chart on the left titled, "Total Counts Per Sample," helps visualize the ove
 
 The rightmost chart, titled "Log Transformed Total Per Sample," helps assess the variability and distribution of gene expression counts across samples. Log-transforming counts reduces skewness by dampening large values, allowing for more comparable distributions across samples. Here, the boxes (indicating the interquartile range) and whiskers (indicating variability outside the quartiles) appear similar across samples. This suggests that while total counts differ, log transformation has minimized variability among samples, partially masking depth differences and indicating a more consistent distribution across samples.
 
+> Note: You can find the processing count list for the 5xFAD mice (+ WT controls) [here](https://github.com/evanpeikon/mouse_AD_models/tree/main/data/count_lists). 
 
 ### Load, Inspect, and Prepare Data for 3xTG-AD Mouse Model
 
@@ -261,6 +262,8 @@ plt.tight_layout()
 plt.show()
 ```
 
+> Note: You can find the processing count list for the 3xTG-AD mice (+ WT controls) [here](https://github.com/evanpeikon/mouse_AD_models/tree/main/data/count_lists). 
+
 ### Load, Inspect, and Prepare Data for PS3O1S Mouse Model
 
 In this section we'll retrieve the data for the 10mo old PS301S mice and their corresponding wild type controls. 
@@ -285,7 +288,7 @@ Notably, upon downloading the data for the PS3O1S mice we can see that the resea
 DEA_PS3O1S = countlist_PS3O1S
 ```
 
-> Note: You can find the count lists for all three mutant mouse models HERE. 
+> Note: You can find the file containing the differential expression analysis results from the PS3O1S mice [here](https://github.com/evanpeikon/mouse_AD_models/tree/main/data/DEA_results). 
 
 ## Quality Control, Filtering, and Normalization
 
