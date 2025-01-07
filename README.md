@@ -868,7 +868,6 @@ plt.show()
 
 <img width="1203" alt="Screenshot 2025-01-07 at 1 38 03 PM" src="https://github.com/user-attachments/assets/d7acc92f-5b85-4070-b349-e418dcf0fadd" />
 
-
 The analysis of the differentially expressed genes (DEGs) in the Alzheimer's Disease mouse models revealed very little overlap between the models. However, when performing Gene Ontology (GO) enrichment analysis for Biological Process (BP), Molecular Function (MF), and Cellular Component (CC), there was substantial overlap in the top enriched terms across the three models. The biologial signiicance of this finding is as explained below:
 
 - Lack of DEG overlap: The minimal overlap in DEGs suggests that the three AD mouse models (5xFAD, 3xTG-AD, and PS3O1S) may exhibit distinct molecular mechanisms or biological pathways in response to Alzheimer's-related pathology. Each model might be influenced by different genetic backgrounds or variations in how they manifest Alzheimer's disease, leading to unique sets of differentially expressed genes.
@@ -879,14 +878,143 @@ In summary, while the differential gene expression profiles vary across models, 
 
 ### Pathway Analysis
 
+Gene Ontology (GO) analysis is useful for identifying broad biological changes associated with gene expression, but it may not always pinpoint specific pathways affected by drug treatment. To address this limitation, we will also perform pathway analysis. Pathway analysis focuses on identifying signaling and metabolic pathways that are enriched among differentially expressed genes, providing insights into how these genes interact within specific biological pathways.
+
+While GO analysis offers a general overview of biological processes and cellular components, pathway analysis provides a more detailed perspective. It maps differentially expressed genes to established biological pathways, such as those documented in KEGG or Reactome databases. This approach clarifies how genes collaborate within biological systems and highlights key pathways altered by the drug treatment. This detailed understanding is crucial for unraveling complex biological mechanisms and identifying potential therapeutic targets.
+
+```python
+# Perform pathway analysis for each dataset
+enrichment_5xFAD = gp.enrichr(gene_list_5xFAD, gene_sets=['KEGG_2016'], organism='mouse')
+enrichment_3xTG_AD = gp.enrichr(gene_list_3xTG_AD, gene_sets=['KEGG_2016'], organism='mouse')
+enrichment_PS3O1S = gp.enrichr(gene_list_PS3O1S, gene_sets=['KEGG_2016'], organism='mouse')
+
+# Retrieve and display results for each analysis
+enrichment_df_5xFAD = enrichment_5xFAD.results
+enrichment_df_3xTG_AD = enrichment_3xTG_AD.results
+enrichment_df_PS3O1S = enrichment_PS3O1S.results
+```
+
+As with the previous sub-sections, we can look at the top overexpressed pathways in each individual AD mouse model, which you can view in the .ipynb for this analysis. In the code block below we'll identify overlapping pathways between our mouse models.
+
+```python
+# Find overlapping Biological Process terms across the three datasets
+bp_5xFAD_terms = set(enrichment_df_5xFAD['Term'])
+bp_3xTG_AD_terms = set(enrichment_df_3xTG_AD['Term'])
+bp_PS3O1S_terms = set(enrichment_df_PS3O1S['Term'])
+
+# Venn Diagram for Biological Process
+plt.figure(figsize=(8, 8))
+venn3([bp_5xFAD_terms, bp_3xTG_AD_terms, bp_PS3O1S_terms], set_labels=('5xFAD', '3xTG-AD', 'PS3O1S'))
+plt.title('Overlapping Pathway Terms')
+plt.show()
+```
+
+<img width="463" alt="Screenshot 2025-01-07 at 1 45 10 PM" src="https://github.com/user-attachments/assets/89885329-e17e-4835-94f4-5b04dc132562" />
+
+The high number of unique pathways for each model indicates distinct biological responses or molecular mechanisms of Alzheimer’s disease in each model. This suggests that each model may reflect different aspects of the disease process or variations in genetic background that drive divergent pathway activation. However, the overlap in pathways, especially the 44 shared across all models, points to core biological processes that are commonly disrupted in Alzheimer's pathology, such as inflammation, neurodegeneration, and cellular stress. These shared pathways represent potential therapeutic targets that could have broader efficacy across different Alzheimer's disease models. The shared pathways between 5xFAD and PS3O1S (94) and the smaller overlap with 3xTG-AD (12) may also suggest a closer relationship between the 5xFAD and PS3O1S models in terms of pathway activation, which may indicate similar disease mechanisms or stages.
 
 ## PPI Network Analysis
 
+In this last analysis section, we'll map the differentially expressed genes (DEGs) from each model to a common protein-protein interaction (PPI) network to understand how DEGs interact with one another and to identify shared key proteins, hubs, or biological processes across different models. 
+
+```
+# Function to fetch PPI data for a list of genes from STRING database
+def fetch_string_ppi(gene_list, species='9606'):
+    base_url = "https://string-db.org/api/tsv/network"
+    genes = "\n".join(gene_list)
+    params = {'identifiers': genes,'species': species, 'limit': 1 }
+    response = requests.post(base_url, data=params)
+    if response.status_code == 200:
+        return response.text
+    else:
+        return None
+
+# Fetch PPI network for your gene lists
+gene_list_all = gene_list_5xFAD + gene_list_3xTG_AD + gene_list_PS3O1S
+ppi_data = fetch_string_ppi(gene_list_all, species='10090')
+
+# Parse the PPI data into a pandas DataFrame
+ppi_df = pd.read_csv(StringIO(ppi_data), sep="\t")
+
+# Filter interactions with a score above 0.7
+ppi_df_filtered = ppi_df[ppi_df['score'] > 0.7]
+
+# Create an empty graph
+G = nx.Graph()
+
+# Add edges to the graph from the filtered PPI data
+for index, row in ppi_df_filtered.iterrows():
+    protein1 = row[0]  # ENSEMBL ID of the first protein
+    protein2 = row[1]  # ENSEMBL ID of the second protein
+    protein_name = row[2]  # This could be a gene/protein name (not used here, but you could use it for node labels)
+    G.add_edge(protein1, protein2, weight=row['score'])
+
+# Visualize the network
+plt.figure(figsize=(12, 12))
+nx.draw_networkx(G, node_size=50, with_labels=False, font_size=10, width=1, alpha=0.7)
+plt.title('PPI Network for DEGs')
+plt.show()
+```
+
+<img width="483" alt="Screenshot 2025-01-07 at 1 50 57 PM" src="https://github.com/user-attachments/assets/af4baa23-80dd-48bd-85d2-ecc765421997" />
+
+Now that we've created a protein-protein interaction network for the DEGs we can identify the most important proteins by degree and betweeness centrality, as demonstrated below.
+
+```python
+# Calculate degree centrality for each node
+degree_centrality = nx.degree_centrality(G)
+
+# Sort nodes by degree centrality (most important hubs)
+sorted_degree_centrality = sorted(degree_centrality.items(), key=lambda x: x[1], reverse=True)
+
+# Display the top 10 most important proteins
+print("Top 10 most important proteins based on degree centrality:")
+for protein, centrality in sorted_degree_centrality[:10]:
+    print(f"{protein}: {centrality}")
+
+# Calculate betweenness centrality
+betweenness_centrality = nx.betweenness_centrality(G)
+
+# Sort nodes by betweenness centrality
+sorted_betweenness = sorted(betweenness_centrality.items(), key=lambda x: x[1], reverse=True)
+
+# Display the top 10 proteins by betweenness centrality
+print("\nTop 10 proteins based on betweenness centrality:")
+for protein, centrality in sorted_betweenness[:10]:
+    print(f"{protein}: {centrality}")
+```
+
+<img width="377" alt="Screenshot 2025-01-07 at 1 52 58 PM" src="https://github.com/user-attachments/assets/72a7184a-9ee9-4076-aabf-a9adae905737" />
+
+Interpreting a Protein-Protein Interaction (PPI) network for differentially expressed genes (DEGs) from your Alzheimer’s disease mouse models involves examining both the structural properties of the network and the biological roles of key proteins within it. This analysis helps uncover potential regulators, signaling hubs, and critical pathways altered in your models.
+
+Degree centrality highlights the most connected nodes (proteins) within the PPI network. These nodes, often referred to as "hubs," represent proteins involved in numerous interactions and are crucial for maintaining the structural and functional integrity of the network. High-degree proteins are typically key regulators or scaffolding proteins that influence a wide range of cellular processes. In our analysis, the top proteins based on degree centrality include TNF (tumor necrosis factor), PTPRC, STAT1, CXCL10, CD86, IRF7, FCGR3, CCL5, TYROBP, and IFIT3. These proteins are heavily interconnected and may play central roles in the biological processes disrupted in Alzheimer’s disease models. For example:
+- TNF is a well-known inflammatory cytokine involved in neuroinflammation, a hallmark of Alzheimer’s disease. Its high connectivity suggests a central role in mediating the immune response and inflammation in your models.
+- PTPRC (CD45) is a key regulator of immune cell signaling and could indicate alterations in microglial or immune cell activity in the brain.
+- STAT1 is a transcription factor involved in interferon signaling and immune response, suggesting its role in driving inflammatory cascades.
+- CXCL10 and CCL5 are chemokines that regulate immune cell recruitment to the brain, potentially implicating changes in neuroimmune interactions.
+- TYROBP (DAP12) is a microglial signaling adapter protein linked to Alzheimer’s pathology, emphasizing its relevance in disease progression.
+
+The presence of these highly connected proteins suggests that inflammation, immune regulation, and microglial activation are central themes in the disrupted biological processes across our models.
+
+Betweenness centrality, on the other hand, measures how often a protein acts as a bridge connecting different parts of the network. Proteins with high betweenness centrality are critical for integrating or coordinating communication between distinct biological modules, often representing key signaling nodes. In our analysis, the top proteins based on betweenness centrality include TNF, P42225, PTPRC, CD74, TYROBP, PLCG1, BRCA1, VAV1, P20029, and ICAM1. These proteins are likely to play pivotal roles in connecting various pathways or processes. For example:
+- TNF appears again, reinforcing its importance not just as a hub but also as a signaling bridge coordinating inflammatory pathways.
+- CD74 is involved in antigen presentation and may highlight interactions between neuroinflammation and adaptive immunity.
+- TYROBP further supports its role as a key microglial signaling protein linking neuroinflammation and phagocytosis pathways.
+- PLCG1 (phospholipase C gamma 1) is a key player in intracellular signaling pathways, including those downstream of immune and growth factor receptors, which could suggest disruptions in microglial or neuronal signaling.
+- ICAM1 is a cell adhesion molecule involved in immune cell trafficking and neurovascular unit integrity, highlighting potential vascular contributions to Alzheimer’s pathology.
+
+The overlap in high-degree and high-betweenness proteins, such as TNF and TYROBP, suggests that these proteins not only serve as central hubs but also act as key connectors between distinct biological processes. This dual role highlights their critical importance in the dysregulated networks of Alzheimer’s disease. Functionally, these proteins likely mediate crosstalk between neuroinflammatory pathways, microglial activation, and immune signaling, which are well-documented contributors to Alzheimer’s pathology. Ultimately, the PPI network analysis reveals key proteins that could serve as biomarkers or therapeutic targets. For example, targeting TNF or modulating TYROBP activity may offer avenues for interventions aimed at reducing neuroinflammation and restoring network balance in Alzheimer’s disease.
+
 # 🧬 Results and Discussion
+
 ## Results
- - analysis resuts
+- summarize results from all sections
+
 ## Discussion 
 -  broader context
+  
 ## Next Steps
+- extend project to include AD mice from same models, but analyzing other brain regions (ex, hippocampus)
 
 # 🧬 Reproducibility
