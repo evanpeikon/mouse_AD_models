@@ -1009,12 +1009,23 @@ The overlap in high-degree and high-betweenness proteins, such as TNF and TYROBP
 # 🧬 Results and Discussion
 
 ## Results
-- summarize results from all sections
 
-## Discussion 
--  broader context
-  
-## Next Steps
-- extend project to include AD mice from same models, but analyzing other brain regions (ex, hippocampus)
+The results of this analysis illuminate the molecular heterogeneity and shared biological themes across three Alzheimer’s disease (AD) mouse models: 5xFAD, 3xTG-AD, and PS3O1S. Each model presents distinct gene expression patterns while converging on common processes central to AD pathology. These findings provide a nuanced understanding of the molecular underpinnings of AD and highlight potential therapeutic targets.
+
+The 5xFAD model, characterized by aggressive amyloid-β plaque deposition, exhibited a robust transcriptional response with 444 differentially expressed genes (DEGs), most of which were up-regulated. This response aligns with the model’s pronounced neuroinflammatory phenotype and rapid disease progression. In contrast, the 3xTG-AD model, which features dual amyloid and tau pathologies, revealed 164 DEGs, approximately 75% up-regulated. The smaller number of DEGs suggests a milder or earlier-stage transcriptional profile consistent with its slower pathology development and cognitive impairments. Meanwhile, the PS3O1S model, emphasizing tau pathology with a slower amyloid-β accumulation, showed 318 DEGs, with 85% up-regulated. This pattern reflects the model’s focus on tau-driven neurodegeneration and compensatory genetic responses.
+
+Despite the distinct DEG profiles, there was minimal overlap across models, with only seven genes shared between 5xFAD and 3xTG-AD, eight between 5xFAD and PS3O1S, and one between 3xTG-AD and PS3O1S. This limited overlap underscores the unique molecular mechanisms represented by each model. However, gene ontology (GO) enrichment analysis revealed substantial convergence at the level of biological processes, molecular functions, and cellular components. All three models exhibited enrichment in pathways related to neuroinflammation, cellular stress responses, and synaptic dysfunction. Immune signaling and receptor binding were common molecular functions, while terms associated with the extracellular matrix, synaptic structures, and immune complexes appeared frequently in the cellular components category. These shared pathways underscore the fundamental processes disrupted in Alzheimer’s pathology.
+
+Protein-protein interaction (PPI) network analysis further highlighted the roles of key proteins in mediating disease processes. Central hub proteins such as TNF, PTPRC, STAT1, CXCL10, and TYROBP emerged as pivotal regulators of neuroinflammation and immune responses. Proteins like TNF and TYROBP not only exhibited high-degree centrality, indicating their extensive connections within the network, but also high-betweenness centrality, reflecting their roles as bridges between distinct biological modules. These findings emphasize the importance of inflammatory and immune pathways in Alzheimer’s pathology and suggest potential targets for therapeutic intervention.
+
+## Discussion and Next Steps
+
+The results highlight the complexity and heterogeneity of Alzheimer’s disease, as modeled by 5xFAD, 3xTG-AD, and PS3O1S. Each model recapitulates distinct aspects of the disease. The 5xFAD model captures the aggressive amyloid pathology and associated immune responses characteristic of advanced AD. The 3xTG-AD model offers a more balanced view of amyloid and tau pathologies but with a milder transcriptional signature, reflecting its intermediate disease phenotype. The PS3O1S model emphasizes tau-driven mechanisms and compensatory genetic responses, presenting a slower disease progression. The minimal overlap in DEGs highlights the molecular diversity across these models, while the shared GO terms and PPI network hubs indicate conserved biological processes central to AD pathology.
+
+These findings also align with prior research identifying neuroinflammation and microglial activation as critical contributors to Alzheimer’s disease. Key regulators like TNF and TYROBP represent promising therapeutic targets, particularly for interventions aimed at modulating immune responses or restoring synaptic function. By focusing on these conserved pathways, researchers can develop strategies to address the shared aspects of AD pathology across different contexts.
+
+Looking ahead, several avenues for future research emerge. Expanding the analysis to include additional AD mouse models, such as APP/PS1 and TauP301S, would provide a broader understanding of molecular diversity and shared features. Exploring gene expression patterns in non-brain tissues, such as the spinal cord, liver, or blood, could uncover systemic effects and peripheral biomarkers of AD. Integration with transcriptomic data from space-flown mice offers a unique opportunity to identify shared features between Alzheimer’s models and space-associated neurodegeneration, enhancing our understanding of cross-species and cross-environmental influences.
+
+Temporal analysis of gene expression changes over the disease course would capture dynamic regulatory events, offering insights into early versus late-stage molecular mechanisms. Experimental validation of key findings, such as perturbing TNF or TYROBP, could elucidate their roles in neuroinflammation and synaptic dysfunction. Additionally, incorporating proteomics and metabolomics data would complement transcriptomic analyses, providing a comprehensive view of molecular changes in AD.
 
 # 🧬 Reproducibility
