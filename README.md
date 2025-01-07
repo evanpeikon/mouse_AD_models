@@ -777,9 +777,109 @@ plt.show()
 
 <img width="903" alt="Screenshot 2025-01-07 at 1 14 38 PM" src="https://github.com/user-attachments/assets/db729963-58bd-4f8b-b6c2-39e1dcb6f3dc" />
 
+The differential expression analysis of the three Alzheimer's disease mouse models—5xFAD, 3xTG-AD, and PS3O1S—reveals interesting insights into the gene expression patterns of each model.
 
+- 5xFAD Model: A total of 444 differentially expressed genes (DEGs) were identified, with the overwhelming majority being up-regulated. This suggests that the 5xFAD model, which typically reflects a more aggressive form of Alzheimer's, shows widespread activation of genes in response to disease pathology, possibly in an attempt to compensate for neurodegenerative changes.
+- 3xTG-AD Model: In the 3xTG-AD model, 164 DEGs were detected, with approximately 75% of them being up-regulated. This model is characterized by the presence of amyloid and tau pathologies, and the up-regulation of genes likely reflects cellular responses to these stresses, particularly in the context of amyloid plaques and tau tangles. The fewer number of DEGs compared to 5xFAD suggests a milder or earlier disease stage.
+- PS3O1S Model: The PS3O1S model, with 318 DEGs, shows a high percentage (85%) of up-regulated genes, indicating a strong genetic response to disease-related insults, possibly driven by tau pathology. This model's higher proportion of up-regulated genes may reflect compensatory mechanisms during the neurodegenerative process.
+
+Additionally, as you can see in the chart above, there is minimal overlap in DEGs between the models. For example, there are only 7 overlapping genes between 5xFAD and 3xTG-AD suggest that while these models share some common disease mechanisms, their gene expression profiles differ significantly, possibly due to differences in the timing or nature of neurodegenerative pathology. Additionally, there are 8 overlapping genes between 5xFAD and PS3O1S, further suggesting some shared molecular pathways related to the disease processes, but still distinct enough to produce largely unique gene expression patterns in each model. Finally, there is only one overlapping gene between 3xTG-AD and PS3O1S, which indicates very little commonality in the genetic responses between these two models. This may reflect divergent disease processes in the two models or differences in the genes and pathways most affected by tau and amyloid pathologies.
+
+Overall, the low overlap of DEGs between models reflects the complexity and heterogeneity of Alzheimer's disease and suggests that different mouse models may recapitulate different aspects of the disease. This could be due to variations in the timing of pathology onset, the specific proteins expressed (amyloid vs. tau), and the resulting downstream effects on gene expression.
 
 ## Functional Enrichment Analysis
+
+Now that we've identified a number of differentially expressed genes, we'll perform a series of functional enrichment analyses, which allow us to identify and interpret the biological process, molecular functions, cellular components, and pathways that are overrepresented or significant in our list of differenrentially expressed genes.
+
+### Gene Ontology (GO) Analysis
+
+The first analysis we'll explore is Gene Ontology (GO) analysis, which categorizes differentially expressed genes according to their associated biological processes, cellular components, and molecular functions. This categorization is based on a structured, hierarchical vocabulary known as the Gene Ontology, which systematically describes gene functions.
+
+While differential expression analysis identifies genes that are up- or down-regulated in response to an intervention, treatment, or drug regimen, GO analysis takes this a step further by linking these genes to broader biological contexts. By grouping genes into functional categories, GO analysis can reveal which biological processes, molecular functions, or cellular components are impacted, offering a more detailed understanding of the mechanisms through which an intervention, treatment, or drug exerts its effects.
+
+First, we'll look at the top biological process for each of our mouse models.
+
+```python
+# Define the gene lists for each model (DEGs) here
+gene_list_5xFAD = deg_5xFAD['Gene_Name'].dropna().astype(str).tolist()
+gene_list_3xTG_AD = deg_3xTG_AD['Gene_Name'].dropna().astype(str).tolist()
+gene_list_PS3O1S = deg_PS3O1S['gene_name'].dropna().astype(str).tolist()
+
+# Perform GO enrichment analysis for Biological Process (BP), Molecular Function (MF), and Cellular Component (CC)
+enrichment_5xFAD_BP = gp.enrichr(gene_list_5xFAD, gene_sets=['GO_Biological_Process_2018'], organism='mouse')
+enrichment_3xTG_AD_BP = gp.enrichr(gene_list_3xTG_AD, gene_sets=['GO_Biological_Process_2018'], organism='mouse')
+enrichment_PS3O1S_BP = gp.enrichr(gene_list_PS3O1S, gene_sets=['GO_Biological_Process_2018'], organism='mouse')
+
+# Extract the Biological Process results for each
+enrichment_5xFAD_BP_df = enrichment_5xFAD_BP.results
+enrichment_3xTG_AD_BP_df = enrichment_3xTG_AD_BP.results
+enrichment_PS3O1S_BP_df = enrichment_PS3O1S_BP.results
+```
+```python
+enrichment_5xFAD_BP_df.head()
+```
+
+<img width="1224" alt="Screenshot 2025-01-07 at 1 34 49 PM" src="https://github.com/user-attachments/assets/08f02d6c-85a6-4c35-8ad8-8216db62ee80" />
+
+```python
+enrichment_3xTG_AD_BP_df.head()
+```
+
+<img width="1182" alt="Screenshot 2025-01-07 at 1 35 14 PM" src="https://github.com/user-attachments/assets/5f178c2c-b498-4bc2-9a02-58b7adf28615" />
+
+```python
+enrichment_PS3O1S_BP_df.head()
+```
+
+<img width="1225" alt="Screenshot 2025-01-07 at 1 35 31 PM" src="https://github.com/user-attachments/assets/22eb252a-4178-4311-bc75-95aace97db98" />
+
+This same analysis was then repeated for molecular functions (MF) and cellular components (CC), which I have not included here, but can be viewed in the .ipynb file for this analysis. After running these analyses, I identified overlapping biological processes, molecular functions, and cellular components for our three AD mouse models, as demonstrated below:
+
+```python
+# Find overlapping Biological Process terms across the three datasets
+bp_5xFAD_terms = set(enrichment_5xFAD_BP_df['Term'])
+bp_3xTG_AD_terms = set(enrichment_3xTG_AD_BP_df['Term'])
+bp_PS3O1S_terms = set(enrichment_PS3O1S_BP_df['Term'])
+
+# Find overlapping Molecular Function terms across the three datasets
+mf_5xFAD_terms = set(enrichment_5xFAD_MF_df['Term'])
+mf_3xTG_AD_terms = set(enrichment_3xTG_AD_MF_df['Term'])
+mf_PS3O1S_terms = set(enrichment_PS3O1S_MF_df['Term'])
+
+# Find overlapping Cellular Component terms across the three datasets
+cc_5xFAD_terms = set(enrichment_5xFAD_CC_df['Term'])
+cc_3xTG_AD_terms = set(enrichment_3xTG_AD_CC_df['Term'])
+cc_PS3O1S_terms = set(enrichment_PS3O1S_CC_df['Term'])
+
+# Create subplots plots 
+plt.figure(figsize=(18, 6))
+plt.subplot(1, 3, 1)  # (number of rows, number of columns, plot index)
+venn3([bp_5xFAD_terms, bp_3xTG_AD_terms, bp_PS3O1S_terms], set_labels=('5xFAD', '3xTG-AD', 'PS3O1S'))
+plt.title('Overlapping Biological Process Terms')
+plt.subplot(1, 3, 2)  # (number of rows, number of columns, plot index)
+venn3([mf_5xFAD_terms, mf_3xTG_AD_terms, mf_PS3O1S_terms], set_labels=('5xFAD', '3xTG-AD', 'PS3O1S'))
+plt.title('Overlapping Molecular Function Terms')
+plt.subplot(1, 3, 3)  # (number of rows, number of columns, plot index)
+venn3([cc_5xFAD_terms, cc_3xTG_AD_terms, cc_PS3O1S_terms], set_labels=('5xFAD', '3xTG-AD', 'PS3O1S'))
+plt.title('Overlapping Cellular Component Terms')
+plt.tight_layout()
+plt.show()
+```
+
+<img width="1203" alt="Screenshot 2025-01-07 at 1 38 03 PM" src="https://github.com/user-attachments/assets/d7acc92f-5b85-4070-b349-e418dcf0fadd" />
+
+
+The analysis of the differentially expressed genes (DEGs) in the Alzheimer's Disease mouse models revealed very little overlap between the models. However, when performing Gene Ontology (GO) enrichment analysis for Biological Process (BP), Molecular Function (MF), and Cellular Component (CC), there was substantial overlap in the top enriched terms across the three models. The biologial signiicance of this finding is as explained below:
+
+- Lack of DEG overlap: The minimal overlap in DEGs suggests that the three AD mouse models (5xFAD, 3xTG-AD, and PS3O1S) may exhibit distinct molecular mechanisms or biological pathways in response to Alzheimer's-related pathology. Each model might be influenced by different genetic backgrounds or variations in how they manifest Alzheimer's disease, leading to unique sets of differentially expressed genes.
+- Overlap in GO terms: Despite the lack of overlap in DEGs, the substantial overlap in the enriched GO terms for Biological Process (BP), Molecular Function (MF), and Cellular Component (CC) suggests that these models share common pathways or cellular processes that are activated in response to Alzheimer's disease. This could reflect conserved biological responses to neurodegeneration, such as neuroinflammatory pathways, synaptic dysfunction, and cellular stress responses, which are common features of Alzheimer's pathology.
+- Implication for therapeutic development: The overlap in GO terms could highlight key biological processes and pathways that might be targeted in therapeutic strategies for Alzheimer's disease. While the specific genes driving these processes differ across models, the fact that similar functional categories (e.g., immune response, cell signaling, and synaptic activity) are involved in all models points to potential universal therapeutic targets or biomarkers for Alzheimer's.
+
+In summary, while the differential gene expression profiles vary across models, the shared functional annotations in BP, MF, and CC indicate that certain fundamental biological processes are universally affected by Alzheimer's pathology. 
+
+### Pathway Analysis
+
+
 ## PPI Network Analysis
 
 # 🧬 Results and Discussion
