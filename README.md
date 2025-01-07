@@ -29,9 +29,9 @@ The data for this project was obtained from three separate studies, each providi
 - Transcriptional, behavioural and biochemical profiling in the 3xTg-AD mouse model reveals a specific signature of amyloid deposition and functional decline in Alzheimer’s disease ([GSE161904](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi))
 - CNS cell-type specific gene profiling of aging P301S tau transgenic mice, which are accessible via the Gene Expression Omnibus (GEO) via the following accension numbers ([GSE118523](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi))
 
-In this project we'll analyze bulk RNA-sequencing data from the cortex of 5xFAD, 3xTG-AD, and PS3O1S transgenic mice and their corresponding wild type controls. To ensure robust and meaningful comparisons, several criteria were applied when selecting the above datasets. For example, all three AD mouse models were vbred on hte same background strain (C57BL/6J) to minimize genetic variability, RNA-sequencing data was exclusively derived from the cortex to ensure tissue consistency, and only mice aged 7–10 months were included, as this age range corresponds to the onset or progression of AD-like pathology in these models. Additionally, I've ensured each data sets has enough replicates for each model to give statistically significant DEG results (>=3/condition) and that each data set has high sequencing depth, minimal technical bias, and proper normalization in downstream analysis to ensure accurate comparisons.
+In this project we'll analyze bulk RNA-sequencing data from the cortex of 5xFAD, 3xTG-AD, and PS3O1S transgenic mice and their corresponding wild type controls. To ensure robust and meaningful comparisons, several criteria were applied when selecting the above datasets. All three AD mouse models were bred on the same background strain (C57BL/6J) to minimize genetic variability, RNA-sequencing data was exclusively derived from the cortex to ensure tissue consistency, and only mice aged 7–10 months were included, as this age range corresponds to the onset or progression of AD-like pathology in these models. Additionally, each dataset has enough replicates for to give statistically significant DEG results, has high sequencing depth, and minimal technical bias. By meeting these criteria, we aimed to optimize the comparability between datasets and reduce confounding factors that could skew downstream analyses.
 
-By meeting these criteria, we aimed to optimize the comparability between datasets and reduce confounding factors that could skew downstream analyses, such as pathway enrichment or protein-protein interaction network construction. While additional data could theoretically enhance the robustness of the analysis, its inclusion often introduces tradeoffs. For example, some datasets included RNA-seq data from AD mice that were either much younger (~2 months) or older (~14 months) than the selected age range. This variability could obscure the biological signals specific to the age range of interest, leading to less reliable DEG comparisons. Additionally, other datasets provided RNA-seq data from different brain regions, such as the hippocampus, rather than the cortex. Including these datasets would add unwanted variability, as gene expression patterns can vary significantly between brain regions, even within the same model and experimental condition.
+While additional data could theoretically enhance the robustness of the analysis, its inclusion often introduces tradeoffs. For example, some datasets included RNA-seq data from AD mice that were either much younger (~2 months) or older (~14 months) than the selected age range. This variability could obscure the biological signals specific to the age range of interest, leading to less reliable DEG comparisons, and as a result these datasets were excluded. Additionally, other datasets provided RNA-seq data from different brain regions, such as the hippocampus, rather than the cortex. Including these datasets would add unwanted variability, as gene expression patterns can vary significantly between brain regions, even within the same model and experimental condition.
 
 # 🧬 Project Staging
 
@@ -111,13 +111,181 @@ countlist_5xFAD.head()
 ```
 <img width="1422" alt="Screenshot 2025-01-07 at 10 22 18 AM" src="https://github.com/user-attachments/assets/df7bd76d-90f2-45fb-8a38-481c806ec8a4" />
 
+The data above is indexed by Ensemble gene ID (ENSMUSG) with 20 columns of RNA-sequencing expression data (i.e., counts). Before performing downstream analyses we'll want to convert the Ensemble gene IDs to gene names, as demonstrated in next code block.
 
-### 3xTG-AD
+```python
+# create MyGeneInfo object
+mg = mygene.MyGeneInfo()
 
-### PS3O1S
+# get the ensembl id from index
+ensembl_ids = countlist_5xFAD.index.tolist()
+
+# query the gene symbols for the ensemble ids and onvert result to dataframe
+gene_info = mg.querymany(ensembl_ids, scopes='ensembl.gene', fields='symbol', species='mouse')
+gene_df = pd.DataFrame(gene_info)
+
+# remove duplicate ensemble ids and rows where symbol is missing or duplicated
+gene_df = gene_df.dropna(subset=['symbol']).drop_duplicates(subset='query')
+
+# map gene symbols back to original dataframe and move gene_name column to front column
+countlist_5xFAD['Gene_Name'] = countlist_5xFAD.index.map(gene_df.set_index('query')['symbol'])
+cols = ['Gene_Name'] + [col for col in countlist_5xFAD.columns if col != 'Gene_Name']
+countlist_5xFAD = countlist_5xFAD[cols]
+```
+Now, we'll display the results to ensure our data frame includes gene names along with ensemble IDs. 
+
+<img width="1315" alt="Screenshot 2025-01-07 at 11 23 49 AM" src="https://github.com/user-attachments/assets/5b3ae70e-421f-46b6-943c-7294eb930a14" />
+
+Next, we'll check for missing data and perform basic data exploration to understand the distribution and variability of RNA sequencing counts across the samples before performing any downstream analysis. First, let's check for missing value:
+
+```python
+# check for missing values
+print(countlist_5xFAD.isnull().sum())
+```
+
+<img width="247" alt="Screenshot 2025-01-07 at 11 40 02 AM" src="https://github.com/user-attachments/assets/4cdcd638-b2ec-48f1-a0cf-5fab0b4378ac" />
+
+Notably, the dataset has no null (missing) values. Next, we'll explore the distribution and variability in our dataset, as demonstrated in the code block below:
+
+```python
+# Drop the Gene Name column from countlist_5xFAD for counting
+countlist_no_name = countlist_5xFAD.iloc[:, 1:]
+
+# Calculate total counts per sample and log transform counts
+total_counts = countlist_no_name.sum(axis=0)
+log_counts = countlist_no_name.apply(lambda x: np.log2(x + 1))
+
+# Create subplots
+fig, axes = plt.subplots(1, 2, figsize=(18, 6))
+
+# Plot total counts per sample
+axes[0].bar(countlist_no_name.columns, total_counts, color='skyblue')  # Use countlist_no_name columns here
+axes[0].set_ylabel('Total Counts')
+axes[0].set_title('Total Counts per Sample')
+axes[0].tick_params(axis='x', rotation=85)
+
+# Plot log transformed counts per sample
+log_counts.boxplot(ax=axes[1])
+axes[1].set_ylabel('Log2(Counts + 1)')
+axes[1].set_title('Log Transformed Counts per Sample')
+axes[1].tick_params(axis='x', rotation=85)
+
+plt.tight_layout()
+plt.show()
+```
+
+<img width="1336" alt="Screenshot 2025-01-07 at 11 24 56 AM" src="https://github.com/user-attachments/assets/cf0e96a2-e09c-4080-bfc7-d43f2606cc0a" />
+
+The chart on the left titled, "Total Counts Per Sample," helps visualize the overall sequencing depth across the samples. Ideally, the bars, representing the total counts, should be of similar height, indicating that sequencing depth is consistent across samples. However, our data suggests uneven sequencing depth across samples, which can impat downstream analyses since samples with higher depth may show higher expression counts, not due to biological differences but due to technical variability. This is a common issue in RNA-seq analysis, and will be addressed via data normalization later on.
+
+The rightmost chart, titled "Log Transformed Total Per Sample," helps assess the variability and distribution of gene expression counts across samples. Log-transforming counts reduces skewness by dampening large values, allowing for more comparable distributions across samples. Here, the boxes (indicating the interquartile range) and whiskers (indicating variability outside the quartiles) appear similar across samples. This suggests that while total counts differ, log transformation has minimized variability among samples, partially masking depth differences and indicating a more consistent distribution across samples.
 
 
+### Load, Inspect, and Prepare Data for 3xTG-AD Mouse Model
 
+In the code blocks below, I'm going to load, clean, and inspect the data for the 3xTG-AD mouse model. In the last sub-section I explained the rationale behind each of the preceding steps in detail, so in this section I'll provide minimal additional commentary as only minor modifications are made to the code from the previous sub-section. 
+
+```
+# Load data for 3xTG-AS mouse model (8mo only)
+url = "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE161904&format=file&file=GSE161904%5FRaw%5Fgene%5Fcounts%5Fcortex%2Etxt%2Egz"
+output_filename = "GSE161904_Raw_gene_counts_cortex.txt"
+column_keyword = "G3" #keyword for 8mo old data
+countlist_3xTG_AD = download_and_load_data(url, output_filename, column_filter=column_keyword)
+
+# Rename columns
+new_column_names = ['3xTG_AD_Cortex_R1', '3xTG_AD_Cortex_R3', '3xTG_AD_Cortex_R4', 'WT_Cortex_R10', 'WT_Cortex_R17', 'WT_Cortex_R9']
+countlist_3xTG_AD.columns = new_column_names
+
+# Add column name to index
+countlist_3xTG_AD.index.set_names('gene_id', inplace=True)
+
+# create MyGeneInfo object
+mg = mygene.MyGeneInfo()
+
+# get the ensembl id from index
+ensembl_ids = countlist_3xTG_AD.index.tolist()
+
+# query the gene symbols for the ensemble ids and onvert result to dataframe
+gene_info = mg.querymany(ensembl_ids, scopes='ensembl.gene', fields='symbol', species='mouse')
+gene_df = pd.DataFrame(gene_info)
+
+# remove duplicate ensemble ids and rows where symbol is missing or duplicated
+gene_df = gene_df.dropna(subset=['symbol']).drop_duplicates(subset='query')
+
+# map gene symbols back to original dataframe and move gene_name column to front column
+countlist_3xTG_AD['Gene_Name'] = countlist_3xTG_AD.index.map(gene_df.set_index('query')['symbol'])
+cols = ['Gene_Name'] + [col for col in countlist_3xTG_AD.columns if col != 'Gene_Name']
+countlist_3xTG_AD = countlist_3xTG_AD[cols]
+
+# view first 5 rows of data to make sure gene_names are added
+countlist_3xTG_AD.head()
+```
+
+<img width="836" alt="Screenshot 2025-01-07 at 11 30 16 AM" src="https://github.com/user-attachments/assets/5ea86ce9-f1bc-42e3-ae8a-9890b18cd6fb" />
+
+Now that we've added gene names to our data frame, we'll check for missing values. 
+
+```python
+# check for missing values
+print(countlist_3xTG_AD.isnull().sum())
+```
+
+<img width="172" alt="Screenshot 2025-01-07 at 11 40 23 AM" src="https://github.com/user-attachments/assets/d95588a0-632e-458f-8b8c-5ba91a305ca1" />
+
+Again, the dataset has no null (missing) values, so, we'll move on to exploring the distribution and variability in our dataset. 
+
+```python
+# Drop the Gene Name column from countlist_3xTG_AD for counting
+countlist_no_name = countlist_3xTG_AD.iloc[:, 1:]
+
+# Calculate total counts per sample and log transform counts
+total_counts = countlist_no_name.sum(axis=0)
+log_counts = countlist_no_name.apply(lambda x: np.log2(x + 1))
+
+# Create subplots
+fig, axes = plt.subplots(1, 2, figsize=(18, 6))
+
+# Plot total counts per sample
+axes[0].bar(countlist_no_name.columns, total_counts, color='skyblue')  # Use countlist_no_name columns here
+axes[0].set_ylabel('Total Counts')
+axes[0].set_title('Total Counts per Sample')
+axes[0].tick_params(axis='x', rotation=85)
+
+# Plot log transformed counts per sample
+log_counts.boxplot(ax=axes[1])
+axes[1].set_ylabel('Log2(Counts + 1)')
+axes[1].set_title('Log Transformed Counts per Sample')
+axes[1].tick_params(axis='x', rotation=85)
+
+plt.tight_layout()
+plt.show()
+```
+
+### Load, Inspect, and Prepare Data for PS3O1S Mouse Model
+
+In this section we'll retrieve the data for the 10mo old PS301S mice and their corresponding wild type controls. 
+
+```python
+# Load data for 3xTG-AS mouse model (8mo only)
+url = "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE118523&format=file&file=GSE118523%5F20161109%5Fold%5Fwt%5Ftg%2Ecsv%2Egz"
+output_filename = "GSE118523_20161109_old_wt_tg.csv"
+column_keyword = ""
+countlist_PS3O1S = download_and_load_data(url, output_filename, sep=',', column_filter=column_keyword)
+
+# View first 5 rows of data
+countlist_PS3O1S.head()
+```
+
+<img width="1136" alt="Screenshot 2025-01-07 at 11 43 00 AM" src="https://github.com/user-attachments/assets/769c05ef-54ae-48a8-867a-a2522f420c70" />
+
+Notably, upon downloading the data for the PS3O1S mice we can see that the researchers did not provide a countlist in GEO and instead this CSV contains the output from differential expression analysis. As a result, we'll save this file as DEA_PS3O1S for reference at a later stage of this project.
+
+```
+# rename countlist_PS3O1S to DEA_PS3O1S
+DEA_PS3O1S = countlist_PS3O1S
+```
+
+> Note: You can find the count lists for all three mutant mouse models HERE. 
 
 ## Quality Control, Filtering, and Normalization
 
