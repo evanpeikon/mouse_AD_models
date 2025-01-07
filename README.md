@@ -64,6 +64,60 @@ from io import StringIO
 ```
 
 ## Load, Inspect, and Prepare Data
+Next, we'll  retrieve our RNA-sequencing data for each of the three AD mouse models and their corresponding wild type controls. 
+
+### Load, Inspect, and Prepare Data for 5xFAD Mouse Model
+First, we'll start by definng a function to download a gzipped file from a URL, unzip it, and theb load it into pandas data frame, as demonstrated int the code block below. 
+
+```python
+def download_and_load_data(url, output_filename, sep="\t", column_filter=None):
+    # Step 1: Download the file using wget
+    print(f"Downloading {output_filename} from {url}...")
+    subprocess.run(["wget", "-O", output_filename + ".gz", url], check=True)
+
+    # Step 2: Gunzip the file
+    print(f"Unzipping {output_filename}.gz...")
+    with gzip.open(output_filename + ".gz", "rb") as gz_file:
+        with open(output_filename, "wb") as out_file:
+            out_file.write(gz_file.read())
+
+    # Step 3: Load the data into a pandas DataFrame
+    print(f"Loading {output_filename} into a pandas DataFrame...")
+    df = pd.read_csv(output_filename, sep=sep, index_col=0)
+
+    # Optional: Filter columns based on the keyword
+    if column_filter:
+        print(f"Filtering columns with keyword '{column_filter}'...")
+        filtered_columns = [col for col in df.columns if column_filter in col]
+        df = df[filtered_columns]
+
+    return df
+
+# Load data for 5xFAD mouse model (8mo only)
+url = "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE168137&format=file&file=GSE168137%5FcountList%2Etxt%2Egz"
+output_filename = "GSE168137_countList.txt"
+column_keyword = "cortex_8mon"
+countlist_5xFAD = download_and_load_data(url, output_filename, column_filter=column_keyword)
+
+# Rename columns
+new_column_names = ["5xFAD_cortex_8mon_Female_295", "5xFAD_cortex_8mon_Female_312","5xFAD_cortex_8mon_Female_339", "5xFAD_cortex_8mon_Female_341", "5xFAD_cortex_8mon_Female_342", "5xFAD_cortex_8mon_Male_299", "5xFAD_cortex_8mon_Male_300", "5xFAD_cortex_8mon_Male_307", "5xFAD_cortex_8mon_Male_387", "5xFAD_cortex_8mon_Male_390",  "BL6_cortex_8mon_Female_322", "BL6_cortex_8mon_Female_338", "BL6_cortex_8mon_Female_340",  "BL6_cortex_8mon_Female_348", "BL6_cortex_8mon_Female_351", "BL6_cortex_8mon_Male_389", "BL6_cortex_8mon_Male_396", "BL6_cortex_8mon_Male_399", "BL6_cortex_8mon_Male_410", "BL6_cortex_8mon_Male_412"]
+countlist_5xFAD.columns = new_column_names
+
+# Drop ensemble version ID from gene_id's
+countlist_5xFAD.index = countlist_5xFAD.index.str.split('.').str[0]
+
+# View first 5 rows of data
+countlist_5xFAD.head()
+```
+<img width="1422" alt="Screenshot 2025-01-07 at 10 22 18 AM" src="https://github.com/user-attachments/assets/df7bd76d-90f2-45fb-8a38-481c806ec8a4" />
+
+
+### 3xTG-AD
+
+### PS3O1S
+
+
+
 
 ## Quality Control, Filtering, and Normalization
 
