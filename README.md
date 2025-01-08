@@ -5,12 +5,11 @@ The purpose of this project is to explore the similarities, differences, and ove
 
 The immediate focus of this project is on establishing which rodent AD models best recapitulate the neurodegenerative conditions associated with space exposure. Achieving this objective is crucial before extending the analysis to include additional AD mouse models, different tissue types, and mice subjected to actual spaceflight. If successful, this project will serve as a springboard for broader investigations into the molecular and functional connections between Alzheimer’s pathology and space-associated neurodegeneration.
 
-This repository is structured into five main sections:
+This repository is structured into four main sections:
 - **Introduction:** Provides an overview of the project and the data sources used, as well as scientific background for the project.  
 - **Project Staging:** Details project dependencies, data loading and preperation, exploratory data analysis (EDA), quality control, filtering, and normalization steps.
 - **Analyses:** Includes differential expression analysis, functional enrichment analysis, and PPI network analysis. Summarizations of the results for each analysis are also provided here.
 - **Results and Discussion:** Synthesizes the results from all analyses and discusses their broader biological context and implications.
-- **Reproducibility:** Explains how to reproduce all the analyses using the provided Docker images and scripts.
 
 ## Scientific Background
 
@@ -1028,4 +1027,3 @@ Looking ahead, several avenues for future research emerge. Expanding the analysi
 
 Temporal analysis of gene expression changes over the disease course would capture dynamic regulatory events, offering insights into early versus late-stage molecular mechanisms. Experimental validation of key findings, such as perturbing TNF or TYROBP, could elucidate their roles in neuroinflammation and synaptic dysfunction. Additionally, incorporating proteomics and metabolomics data would complement transcriptomic analyses, providing a comprehensive view of molecular changes in AD.
 
-# 🧬 Reproducibility
