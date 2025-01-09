@@ -32,6 +32,8 @@ In this project we'll analyze bulk RNA-sequencing data from the cortex of 5xFAD,
 
 While additional data could theoretically enhance the robustness of the analysis, its inclusion often introduces tradeoffs. For example, some datasets included RNA-seq data from AD mice that were either much younger (~2 months) or older (~14 months) than the selected age range. This variability could obscure the biological signals specific to the age range of interest, leading to less reliable DEG comparisons, and as a result these datasets were excluded. Additionally, other datasets provided RNA-seq data from different brain regions, such as the hippocampus, rather than the cortex. Including these datasets would add unwanted variability, as gene expression patterns can vary significantly between brain regions, even within the same model and experimental condition.
 
+> Note: You can find a non-technical write up of this project, and the results of my analysis, [here](https://decodingbiology.substack.com/p/unraveling-molecular-pathways-in).
+
 # 🧬 Project Staging
 
 This section is broken into three sub-sections:
