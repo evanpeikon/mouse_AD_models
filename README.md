@@ -918,7 +918,7 @@ The high number of unique pathways for each model indicates distinct biological 
 
 In this last analysis section, we'll map the differentially expressed genes (DEGs) from each model to a common protein-protein interaction (PPI) network to understand how DEGs interact with one another and to identify shared key proteins, hubs, or biological processes across different models. 
 
-```
+```python
 # Function to fetch PPI data for a list of genes from STRING database
 def fetch_string_ppi(gene_list, species='9606'):
     base_url = "https://string-db.org/api/tsv/network"
